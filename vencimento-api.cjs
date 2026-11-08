@@ -255,6 +255,7 @@ function startServer(port = 4174) {
         res.end(fs.readFileSync(agentFile));
         return;
       }
+      if (requestPath === '/' || requestPath === '') { res.writeHead(302, { location: '/dashboard' }); res.end(); return; }
       const page = requestPath === '/dashboard' ? 'vencimento-dashboard.html' : 'vencimento-landing.html';
       const filePath = path.join(__dirname, page);
       if (!fs.existsSync(filePath)) { res.writeHead(404); res.end('Not found'); return; }
