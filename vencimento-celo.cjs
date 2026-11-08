@@ -28,10 +28,14 @@ async function sendWbrlTransfer({ recipient, amount, dataSuffix }) {
   const maxSinglePayment = BigInt(process.env.MAX_SINGLE_PAYMENT_WBRL || '0');
   validateMoneyPathConfig({ chainId: CELO_MAINNET, tokenAddress: WBRL, agentWallet: process.env.CELO_AGENT_WALLET, privateKey: process.env.AGENT_PRIVATE_KEY, dataSuffix: process.env.CELO_DATA_SUFFIX, maxSinglePayment });
   if (amount > maxSinglePayment) throw new Error('Transfer exceeds the configured maximum single payment.');
-  const { createWalletClient, http } = await import('viem');
+  const { createWalletClient, createPublicClient, http } = await import('viem');
   const { privateKeyToAccount } = await import('viem/accounts');
   const { celo } = await import('viem/chains');
   const account = privateKeyToAccount(process.env.AGENT_PRIVATE_KEY);
+  if (account.address.toLowerCase() !== process.env.CELO_AGENT_WALLET.toLowerCase()) throw new Error('Signer does not match the registered agent wallet.');
+  const publicClient = createPublicClient({ chain: celo, transport: http(process.env.CELO_RPC_URL || 'https://forno.celo.org') });
+  const balance = await publicClient.readContract({ address: WBRL, abi: [{ type: 'function', name: 'balanceOf', stateMutability: 'view', inputs: [{ name: 'owner', type: 'address' }], outputs: [{ type: 'uint256' }] }], functionName: 'balanceOf', args: [account.address] });
+  if (balance < amount) throw new Error('Insufficient on-chain wBRL balance.');
   const transfer = prepareWbrlTransfer({ recipient, amount, dataSuffix: process.env.CELO_DATA_SUFFIX });
   const wallet = createWalletClient({ account, chain: celo, transport: http(process.env.CELO_RPC_URL || 'https://forno.celo.org') });
   const hash = await wallet.sendTransaction({ to: transfer.to, data: transfer.data, value: transfer.value });

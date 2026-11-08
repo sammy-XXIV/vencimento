@@ -6,7 +6,7 @@ const { prepareWbrlTransfer, sendWbrlTransfer } = require('./vencimento-celo.cjs
 
 const WALLET = /^0x[a-fA-F0-9]{40}$/;
 
-function createApi({ dataFile = null } = {}) {
+function createApi({ dataFile = null, sendTransfer = sendWbrlTransfer } = {}) {
   const state = {
     shop: null,
     balance: null,
@@ -17,6 +17,8 @@ function createApi({ dataFile = null } = {}) {
     inflows: [],
     approvedBills: new Set(),
     pendingReview: null,
+    history: [],
+    scheduler: { enabled: false, lastRun: null, decisions: null },
   };
   if (dataFile) loadState(state, dataFile);
 
@@ -24,11 +26,13 @@ function createApi({ dataFile = null } = {}) {
   const buildPlan = async () => {
     if (!state.shop) throw new Error('Shop configuration is required before planning payments.');
     const { buildPaymentPlan } = await import('./vencimento-core.mjs');
-    const bills = [...state.bills.values()].map((bill) => {
+    const bills = [...state.bills.values()].filter((bill) => bill.status === 'open').map((bill) => {
       const supplier = state.suppliers.get(bill.supplierId);
       return { id: bill.id, supplier: supplier.name, amount: bill.amount, dueDate: bill.dueDate, priority: supplier.priority, graceDays: bill.graceDays };
     });
-    return buildPaymentPlan({ balance: state.balance, reserve: state.reserve, dailySpendCap: state.dailySpendCap, bills, inflows: state.inflows });
+    const today = new Date().toISOString().slice(0, 10);
+    const spent = state.history.filter((item) => item.createdAt.startsWith(today)).reduce((sum, item) => sum + BigInt(item.amount), 0n);
+    return buildPaymentPlan({ balance: state.balance, reserve: state.reserve, dailySpendCap: state.dailySpendCap > spent ? state.dailySpendCap - spent : 0n, bills, inflows: state.inflows });
   };
 
   return {
@@ -36,6 +40,23 @@ function createApi({ dataFile = null } = {}) {
     async request(method, path, payload = {}) {
       if (method === 'GET' && path === '/api/health') return response(200, { ok: true });
       if (method === 'GET' && path === '/api/state') return response(200, serializeState(state));
+      if (method === 'GET' && path === '/api/evidence') {
+        return response(200, JSON.parse(fs.readFileSync(path.join(__dirname, 'payment-evidence.json'), 'utf8')));
+      }
+      if (method === 'POST' && path === '/api/scheduler') {
+        state.scheduler.enabled = payload.enabled === true;
+        persist();
+        return response(200, state.scheduler);
+      }
+      if (method === 'POST' && path === '/api/scheduler/run') {
+        try {
+          const plan = await buildPlan();
+          state.scheduler.lastRun = new Date().toISOString();
+          state.scheduler.decisions = serialize({ ...plan, payments: plan.payments.map((bill) => ({ ...bill, reason: 'Eligible by supplier priority, cash reserve and daily cap; preview only.' })) });
+          persist();
+          return response(200, state.scheduler);
+        } catch (error) { return response(409, { error: error.message }); }
+      }
 
       if (method === 'POST' && path === '/api/config') {
         const balance = parseAmount(payload.balance);
@@ -106,6 +127,7 @@ function createApi({ dataFile = null } = {}) {
       if (method === 'POST' && path === '/api/payment-batches/approve') {
         const billIds = Array.isArray(payload.billIds) ? payload.billIds : [];
         if (!billIds.length || billIds.some((id) => !state.bills.has(id))) return response(422, { error: 'Approve only known bill ids.' });
+        if (billIds.some((id) => state.approvedBills.has(id))) return response(409, { error: 'One or more bills are already approved.' });
         if (!validReview(state, payload.reviewToken, billIds)) return response(403, { error: 'A fresh, matching owner review is required before approval.' });
         const plan = await buildPlan();
         const payableIds = new Set(plan.payments.map((payment) => payment.id));
@@ -125,13 +147,25 @@ function createApi({ dataFile = null } = {}) {
 
       if (method === 'POST' && path === '/api/payment-batches/submit') {
         const billIds = Array.isArray(payload.billIds) ? payload.billIds : [];
-        if (!billIds.length || billIds.some((id) => !state.approvedBills.has(id))) return response(409, { error: 'Only an approved payment batch can be submitted.' });
+        if (!billIds.length || new Set(billIds).size !== billIds.length || billIds.some((id) => !state.approvedBills.has(id) || state.bills.get(id)?.status !== 'open')) return response(409, { error: 'Only an approved, unpaid payment batch can be submitted.' });
+        const plan = await buildPlan();
+        if (billIds.some((id) => !plan.payments.some((bill) => bill.id === id))) return response(409, { error: 'Payment no longer fits the cash plan.' });
+        if ([...state.bills.values()].some((bill) => bill.status === 'submitting')) return response(409, { error: 'A transfer is pending. Reconcile it before another submission.' });
+        billIds.forEach((id) => { state.bills.get(id).status = 'submitting'; });
+        persist();
         try {
           const results = [];
           for (const id of billIds) {
             const bill = state.bills.get(id);
             const supplier = state.suppliers.get(bill.supplierId);
-            results.push(await sendWbrlTransfer({ recipient: supplier.wallet, amount: bill.amount, dataSuffix: process.env.CELO_DATA_SUFFIX || '' }));
+            const result = await sendTransfer({ recipient: supplier.wallet, amount: bill.amount, dataSuffix: process.env.CELO_DATA_SUFFIX || '' });
+            const record = serialize({ ...result, billId: id, supplier: supplier.name, createdAt: new Date().toISOString(), status: 'broadcast' });
+            state.history.push(record);
+            bill.status = 'broadcast';
+            state.balance -= bill.amount;
+            state.approvedBills.delete(id);
+            persist();
+            results.push(record);
           }
           return response(200, { status: 'submitted', transfers: results });
         } catch (error) { return response(403, { error: error.message }); }
@@ -154,7 +188,7 @@ function serialize(value) {
 }
 
 function serializeState(state) {
-  return serialize({ shop: state.shop, balance: state.balance, reserve: state.reserve, dailySpendCap: state.dailySpendCap, suppliers: [...state.suppliers.values()], bills: [...state.bills.values()], inflows: state.inflows, approvedBills: [...state.approvedBills] });
+  return serialize({ shop: state.shop, balance: state.balance, reserve: state.reserve, dailySpendCap: state.dailySpendCap, suppliers: [...state.suppliers.values()], bills: [...state.bills.values()], inflows: state.inflows, approvedBills: [...state.approvedBills], history: state.history, scheduler: state.scheduler });
 }
 
 function loadState(state, dataFile) {
@@ -168,6 +202,8 @@ function loadState(state, dataFile) {
   state.bills = new Map((saved.bills || []).map((bill) => [bill.id, { ...bill, amount: BigInt(bill.amount) }]));
   state.inflows = (saved.inflows || []).map((inflow) => ({ ...inflow, amount: BigInt(inflow.amount) }));
   state.approvedBills = new Set(saved.approvedBills || []);
+  state.history = saved.history || [];
+  state.scheduler = saved.scheduler || state.scheduler;
 }
 
 function saveState(state, dataFile) {
@@ -186,6 +222,10 @@ function response(status, body) { return { status, body }; }
 
 function startServer(port = 4174) {
   const api = createApi({ dataFile: process.env.VENCIMENTO_DATA_FILE || './vencimento-state.json' });
+  const scheduler = setInterval(async () => {
+    if (api.state.scheduler.enabled) await api.request('POST', '/api/scheduler/run');
+  }, 60000);
+  scheduler.unref();
   const server = http.createServer(async (req, res) => {
     if (req.method === 'OPTIONS') {
       res.writeHead(204, { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS', 'access-control-allow-headers': 'content-type' });
@@ -199,6 +239,14 @@ function startServer(port = 4174) {
       try { body = JSON.parse(Buffer.concat(chunks).toString() || '{}'); } catch { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid JSON.' })); return; }
     }
     const requestPath = req.url.split('?')[0];
+    if (req.method === 'POST') {
+      const token = process.env.VENCIMENTO_OWNER_TOKEN;
+      if (!token || req.headers.authorization !== `Bearer ${token}`) {
+        res.writeHead(401, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Owner access is required. Configure the server owner token and connect from the dashboard.' }));
+        return;
+      }
+    }
     if (req.method === 'GET' && !requestPath.startsWith('/api/')) {
       if (requestPath === '/agent.json') {
         const agentFile = path.join(__dirname, 'agent.json');

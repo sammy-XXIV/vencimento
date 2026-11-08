@@ -158,6 +158,8 @@
         <div class="card panel"><h2>Expected money in</h2><p class="section-head" style="margin:5px 0 0"><span class="cell-sub">Entered by you · no guessing</span><span class="pill" id="inflowPill">—</span></p><div id="inflowRows"></div></div>
         <div class="card panel"><h2>Recent receipts</h2><div id="receiptRows" class="receipt-list" style="margin-top:17px"></div></div>
       </section>
+      <section class="review-card"><h2>Owner access</h2><input type="password" id="ownerToken" placeholder="Owner access token" autocomplete="off"><button id="connectOwner">Connect</button><button id="submitCelo" disabled>Send approved payments</button></section>
+      <section class="review-card"><h2>Automatic cash planning</h2><p>Reviews bills every minute. Preview mode does not transfer funds.</p><button id="schedulerToggle">Enable automatic planning</button><button id="schedulerRun">Run preview now</button><p id="schedulerStatus" aria-live="polite"></p><div id="schedulerDecisions"></div></section>
     </main>
   </div>
   <script>
@@ -168,15 +170,29 @@
     const reviewStatus = document.querySelector('#reviewStatus');
     let currentPlan = null;
     let currentReviewToken = null;
+    let approvedIds = [];
+    let schedulerEnabled = false;
+    let ownerToken = '';
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
     async function callApi(path, options = {}) {
-      const response = await fetch(API + path, { headers: { 'content-type': 'application/json' }, ...options });
+      if (options.body) {
+        const data = JSON.parse(options.body);
+        for (const key of ['balance', 'reserve', 'dailySpendCap', 'amount']) if (key in data) {
+          const text = String(data[key]);
+          if (!/^\d+(\.\d{1,18})?$/.test(text)) throw new Error('Amounts require up to 18 decimal places.');
+          const [whole, fraction = ''] = text.split('.');
+          data[key] = (BigInt(whole) * 10n ** 18n + BigInt(fraction.padEnd(18, '0'))).toString();
+        }
+        options.body = JSON.stringify(data);
+      }
+      const response = await fetch(API + path, { ...options, headers: { 'content-type': 'application/json', authorization: `Bearer ${ownerToken}` } });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || `API error ${response.status}`);
       return body;
     }
 
-    const money = (value) => `R$ ${Number(value).toLocaleString('pt-BR')}`;
+    const money = (value) => `R$ ${(Number(value) / 1e18).toLocaleString('pt-BR', { maximumFractionDigits: 6 })}`;
     const initials = (name) => name.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase();
 
     function renderState(state) {
@@ -215,6 +231,13 @@
     async function refresh() {
       const state = await callApi('/api/state');
       renderState(state);
+      approvedIds = state.approvedBills.filter((id) => state.bills.some((bill) => bill.id === id && bill.status === 'open'));
+      document.querySelector('#submitCelo').disabled = !approvedIds.length;
+      document.querySelector('#receiptRows').innerHTML = (state.history || []).map((item) => `<div class="receipt"><div><strong>${esc(item.supplier)} · ${money(item.amount)} wBRL</strong><br>${esc(item.status)} · ${esc(item.createdAt)}<br><span class="review-wallet">${esc(item.recipient)}</span><br>${/^0x[a-fA-F0-9]{64}$/.test(item.hash) ? `<a href="https://celoscan.io/tx/${item.hash}" target="_blank" rel="noopener">View transaction</a>` : ''}</div></div>`).join('') || '<p>No app receipts yet. Historical demonstration transfers are linked in the README.</p>';
+      renderScheduler(state.scheduler);
+      const evidence = await callApi('/api/evidence');
+      document.querySelector('#receiptRows').insertAdjacentHTML('beforeend', `<p>${esc(evidence.description)}</p>` + evidence.payments.map((item) => `<p>Confirmed demo: ${esc(item.amount)} wBRL · <a href="https://celoscan.io/tx/${esc(item.hash)}" target="_blank" rel="noopener">View receipt</a></p>`).join(''));
+      if (!ownerToken) return;
       if (!state.shop) { setupCard.classList.remove('saved'); return; }
       setupCard.classList.add('saved');
       const plan = await callApi('/api/plan', { method: 'POST', body: '{}' });
@@ -256,7 +279,26 @@
       catch (error) { batch.disabled = false; batch.textContent = 'Approve payment batch'; success.textContent = error.message; success.style.display = 'block'; }
     });
 
-    refresh().catch((error) => { success.textContent = `Backend offline: ${error.message}`; success.style.display = 'block'; });
+    function report(error) { success.textContent = error.message; success.style.display = 'block'; }
+    function renderScheduler(scheduler) {
+      if (!scheduler) return;
+      schedulerEnabled = scheduler.enabled;
+      document.querySelector('#schedulerToggle').textContent = scheduler.enabled ? 'Pause automatic planning' : 'Enable automatic planning';
+      document.querySelector('#schedulerStatus').textContent = `Preview · ${scheduler.enabled ? 'running every minute' : 'paused'} · Last run: ${scheduler.lastRun || 'never'}`;
+      const plan = scheduler.decisions;
+      document.querySelector('#schedulerDecisions').innerHTML = plan ? [...plan.payments.map((bill) => ({ ...bill, decision: 'Would pay' })), ...plan.delayed.map((bill) => ({ ...bill, decision: 'Delay' }))].map((bill) => `<p><strong>${esc(bill.decision)}: ${esc(bill.supplier)} · ${money(bill.amount)}</strong><br>${esc(bill.reason)}</p>`).join('') || 'No open bills.' : '';
+    }
+    document.querySelector('#connectOwner').onclick = () => { ownerToken = document.querySelector('#ownerToken').value; refresh().catch(report); };
+    document.querySelector('#submitCelo').onclick = async (event) => {
+      event.currentTarget.disabled = true;
+      try { await callApi('/api/payment-batches/submit', { method: 'POST', body: JSON.stringify({ billIds: approvedIds }) }); await refresh(); }
+      catch (error) { report(error); }
+    };
+    document.querySelector('#schedulerToggle').onclick = async () => { try { renderScheduler(await callApi('/api/scheduler', { method: 'POST', body: JSON.stringify({ enabled: !schedulerEnabled }) })); } catch (error) { report(error); } };
+    document.querySelector('#schedulerRun').onclick = async () => { try { renderScheduler(await callApi('/api/scheduler/run', { method: 'POST', body: '{}' })); } catch (error) { report(error); } };
+    batch.addEventListener('click', () => setTimeout(() => refresh().catch(report), 500));
+    setInterval(() => { if (schedulerEnabled) callApi('/api/state').then((state) => renderScheduler(state.scheduler)).catch(report); }, 15000);
+    refresh().catch(report);
   </script>
 </body>
 </html>

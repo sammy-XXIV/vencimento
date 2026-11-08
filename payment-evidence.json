@@ -1,0 +1,8 @@
+{
+  "description": "Owner-authorized demonstration transfers; not evidence of actual supplier invoices or automated payment cycles.",
+  "payments": [
+    { "amount": "0.1", "hash": "0x7172d1c716af602fd2364a7a1675a05607c0b220223df451252bc9805af7bd64" },
+    { "amount": "0.1", "hash": "0x9457f684df87b816c46bf687e36d41183e002a5abed8b2c2031f809793d165a6" },
+    { "amount": "0.1", "hash": "0xd53a28f4437538b546cdc499b6f6d4d18ebc392e8df729edca0c3227c8a8ba5c" }
+  ]
+}

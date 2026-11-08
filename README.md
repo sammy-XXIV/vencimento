@@ -20,6 +20,10 @@ Vencimento is a cash-flow agent for small Brazilian shops. It reads supplier bil
 
 ## Current flow
 
+Dashboard payments require `VENCIMENTO_OWNER_TOKEN` on the server. Enter that token in Owner access (it stays in browser memory). Mainnet sending remains disabled by default. The app records broadcast hashes and blocks repeat submissions; use the explorer receipt to confirm settlement. A submission error leaves the bill on hold for reconciliation rather than automatically retrying an uncertain transfer.
+
+Automatic cash planning runs every minute after enabling it. It persists its last pay/delay decisions and explanations. This scheduler is **preview only**: it does not autonomously send money. Real automatic execution still requires a durable transaction reconciliation worker and policy authorization.
+
 1. Configure the shop wallet, balance, reserve, and daily cap.
 2. Add supplier wallets and bills.
 3. Add expected inflows.
