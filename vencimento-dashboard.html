@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Vencimento — cash before it becomes a problem</title>
-  <script type="importmap">{"imports":{"react":"https://esm.sh/react@18.3.1","react-dom":"https://esm.sh/react-dom@18.3.1","react-dom/client":"https://esm.sh/react-dom@18.3.1/client","react/jsx-runtime":"https://esm.sh/react@18.3.1/jsx-runtime"}}</script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap');
     :root {
@@ -133,7 +132,7 @@
         <div class="card metric"><div class="metric-label">Expected inflow</div><div class="metric-value" id="inflowValue">—</div></div>
       </section>
 
-      <section class="card panel setup-card" id="setupCard"><h2>Set up your shop</h2><p class="section-head" style="margin:5px 0 18px"><span class="cell-sub">Vencimento pays your suppliers in wBRL (Brazilian Real on Celo) so bills don't go overdue. Enter amounts in R$ — 1 wBRL = R$ 1.</span></p><form id="setupForm"><div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;padding:14px;background:var(--green-soft);border-radius:10px;border:1px solid #c5dfd2;flex-wrap:wrap"><div id="privy-login-root" style="display:contents"></div></div><div class="setup-grid"><label>Shop name<input name="shopName" required placeholder="Casa Aurora"></label><label>Shop wallet (0x…)<input name="wallet" required placeholder="0x…"></label><label>Balance (R$ in wBRL)<input name="balance" required type="number" min="0" placeholder="1000"></label><label>Cash reserve (R$)<input name="reserve" required type="number" min="0" placeholder="300"></label><label>Daily limit (R$)<input name="dailySpendCap" required type="number" min="1" placeholder="3000"></label></div><button class="batch-button" type="submit">Save shop settings</button></form></section>
+      <section class="card panel setup-card" id="setupCard"><h2>Set up your shop</h2><p class="section-head" style="margin:5px 0 18px"><span class="cell-sub">Vencimento pays your suppliers in wBRL (Brazilian Real on Celo) so bills don't go overdue. Enter amounts in R$ — 1 wBRL = R$ 1.</span></p><form id="setupForm"><div class="setup-grid"><label>Shop name<input name="shopName" required placeholder="Casa Aurora"></label><label>Shop wallet (0x…)<input name="wallet" required placeholder="0x…"></label><label>Balance (R$ in wBRL)<input name="balance" required type="number" min="0" placeholder="1000"></label><label>Cash reserve (R$)<input name="reserve" required type="number" min="0" placeholder="300"></label><label>Daily limit (R$)<input name="dailySpendCap" required type="number" min="1" placeholder="3000"></label></div><button class="batch-button" type="submit">Save shop settings</button></form></section>
 
       <section class="data-entry" id="dataEntry">
         <div class="card panel"><h3>Add a supplier</h3><span class="cell-sub">Only whitelisted wallets can be paid.</span><form class="form-stack" id="supplierForm"><label>Supplier name<input name="name" required placeholder="Supplier name"></label><label>Supplier wallet<input name="wallet" required placeholder="0x…"></label><label>Priority<input name="priority" required type="number" min="1" value="1"></label><button class="batch-button" type="submit">Save supplier</button></form></div>
@@ -337,71 +336,6 @@
     batch.addEventListener('click', () => setTimeout(() => refresh().catch(report), 500));
     setInterval(() => { if (schedulerEnabled) callApi('/api/state').then((state) => renderScheduler(state.scheduler)).catch(report); }, 15000);
     refresh().catch(report);
-  </script>
-  <script type="module">
-    import { createElement as h, useState, useEffect } from 'react';
-    import { createRoot } from 'react-dom/client';
-    import { PrivyProvider, usePrivy } from 'https://esm.sh/@privy-io/react-auth?deps=react@18.3.1,react-dom@18.3.1';
-
-    const PRIVY_APP_ID = 'cmtvmzrxw03wg0claoenk82yy';
-
-    function onWalletConnected(address, label) {
-      const walletInput = document.querySelector('[name="wallet"]');
-      if (walletInput && !walletInput.value) walletInput.value = address;
-      const root = document.querySelector('#privy-login-root');
-      if (root) root.dataset.connected = '1';
-      const badge = document.querySelector('#walletBadge');
-      const badgeAddr = document.querySelector('#walletBadgeAddr');
-      if (badge && badgeAddr) { badgeAddr.textContent = label; badge.style.display = ''; }
-    }
-
-    function LoginWidget() {
-      const { ready, authenticated, user, login, logout } = usePrivy();
-      const [status, setStatus] = useState('');
-
-      useEffect(() => {
-        if (!authenticated || !user) return;
-        const addr = user.wallet?.address ?? user.linkedAccounts?.find(a => a.type === 'wallet')?.address;
-        const email = user.email?.address ?? user.google?.email ?? '';
-        if (addr) {
-          onWalletConnected(addr, email || addr.slice(0, 6) + '…' + addr.slice(-4));
-          setStatus(`Connected: ${email || addr.slice(0, 6) + '…' + addr.slice(-4)}`);
-        }
-      }, [authenticated, user]);
-
-      if (!ready) return h('span', { style: { fontSize: '13px', color: 'var(--muted)' } }, 'Loading…');
-
-      if (authenticated && status) return h('div', { style: { display: 'flex', gap: 10, alignItems: 'center', flex: 1 } },
-        h('span', { style: { fontSize: '13px', color: 'var(--green)', flex: 1 } }, '✓ ' + status),
-        h('button', { type: 'button', className: 'batch-button', style: { fontSize: '12px', background: 'var(--muted)' }, onClick: logout }, 'Disconnect')
-      );
-
-      return h('div', { style: { display: 'flex', gap: 10, alignItems: 'center', flex: 1, flexWrap: 'wrap' } },
-        h('span', { style: { fontSize: '13px', flex: 1, minWidth: 200 } }, 'Login to auto-fill your wallet — email, Google, or MetaMask.'),
-        h('button', { type: 'button', className: 'batch-button', style: { fontSize: '12px' }, onClick: login }, 'Login with email'),
-        h('button', { type: 'button', className: 'batch-button', style: { fontSize: '12px', background: 'var(--blue)' }, onClick: async () => {
-          if (!window.ethereum) { setStatus('No wallet found — use email login.'); return; }
-          try {
-            const [addr] = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            onWalletConnected(addr, addr.slice(0, 6) + '…' + addr.slice(-4));
-            setStatus('Connected: ' + addr.slice(0, 6) + '…' + addr.slice(-4));
-          } catch (e) { setStatus(e.message); }
-        }}, 'Connect wallet')
-      );
-    }
-
-    function App() {
-      return h(PrivyProvider, {
-        appId: PRIVY_APP_ID,
-        config: {
-          loginMethods: ['email', 'google', 'wallet'],
-          embeddedWallets: { createOnLogin: 'users-without-wallets' },
-          appearance: { theme: 'light', accentColor: '#1e7a62' },
-        }
-      }, h(LoginWidget));
-    }
-
-    createRoot(document.getElementById('privy-login-root')).render(h(App));
   </script>
 </body>
 </html>

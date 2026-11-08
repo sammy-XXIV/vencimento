@@ -93,8 +93,8 @@
 <body>
   <div class="wrap">
     <header>
-      <a class="logo" href="vencimento-landing.html"><span class="glyph">V</span> vencimento</a>
-      <nav class="nav"><a href="#how">How it works</a><a href="#rules">Guardrails</a><a class="login" href="vencimento-dashboard.html">Open dashboard →</a></nav>
+      <a class="logo" href="/"><span class="glyph">V</span> vencimento</a>
+      <nav class="nav"><a href="#how">How it works</a><a href="#rules">Guardrails</a><a class="login" href="/dashboard">Open dashboard →</a></nav>
     </header>
     <main>
       <section class="hero">
@@ -102,7 +102,7 @@
           <div class="kicker">Cash-flow agent for Brazilian shops</div>
           <h1>Pay what matters. Keep the lights on.</h1>
           <p class="hero-copy">Vencimento turns supplier bills, due dates, and uneven customer payments into one calm payment plan—settled in wBRL on Celo.</p>
-          <div class="buttons"><a class="button primary" href="vencimento-dashboard.html">See the shop dashboard ↗</a><a class="button secondary" href="#how">See how it works</a></div>
+          <div class="buttons" id="privy-btn-root" style="margin-top:31px"></div>
           <div class="proof">Built for owners who cannot afford a surprise at the end of the week.</div>
         </div>
         <div class="visual">
@@ -133,5 +133,45 @@
   </div>
   <section class="feature" id="rules"><div class="wrap feature-grid"><div><div class="kicker" style="color:#8fd3ad">The guardrails</div><h2>Automation with a hand on the till.</h2><p class="intro-copy">Vencimento can rank the bills, but it cannot invent a supplier or quietly spend the reserve. The owner stays in control of the decisions that matter.</p></div><div class="rule-card"><p>Casa Aurora policy</p><div class="rule"><strong>Cash floor</strong><span>R$ 300 always stays put</span></div><div class="rule"><strong>Daily cap</strong><span>R$ 3,000 maximum</span></div><div class="rule"><strong>Supplier list</strong><span>Verified wallets only</span></div><div class="rule"><strong>Approval</strong><span>Required before payment</span></div></div></div></section>
   <div class="wrap"><footer><span>Vencimento · wBRL on Celo</span><span>Pay clearly. Keep moving.</span></footer></div>
+<script type="importmap">{"imports":{"react":"https://esm.sh/react@18.3.1","react-dom/client":"https://esm.sh/react-dom@18.3.1/client","react/jsx-runtime":"https://esm.sh/react@18.3.1/jsx-runtime"}}</script>
+<script type="module">
+  import { createElement as h, useState, useEffect } from 'https://esm.sh/react@18.3.1';
+  import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
+  import { PrivyProvider, usePrivy } from 'https://esm.sh/@privy-io/react-auth?deps=react@18.3.1,react-dom@18.3.1';
+
+  const PRIVY_APP_ID = 'cmtvmzrxw03wg0claoenk82yy';
+
+  function LoginButtons() {
+    const { ready, authenticated, login } = usePrivy();
+
+    useEffect(() => {
+      if (authenticated) window.location.href = '/dashboard';
+    }, [authenticated]);
+
+    if (!ready) return h('span', { style: { fontSize: '13px', color: '#7b8581' } }, 'Loading…');
+
+    return h('div', { style: { display: 'flex', gap: '14px', flexWrap: 'wrap' } },
+      h('button', {
+        className: 'button primary',
+        style: { cursor: 'pointer', border: 'none' },
+        onClick: login
+      }, 'Sign in with email ↗'),
+      h('a', { className: 'button secondary', href: '/dashboard' }, 'See the dashboard')
+    );
+  }
+
+  function App() {
+    return h(PrivyProvider, {
+      appId: PRIVY_APP_ID,
+      config: {
+        loginMethods: ['email', 'google', 'wallet'],
+        embeddedWallets: { createOnLogin: 'users-without-wallets' },
+        appearance: { theme: 'light', accentColor: '#145b48' },
+      }
+    }, h(LoginButtons));
+  }
+
+  createRoot(document.getElementById('privy-btn-root')).render(h(App));
+</script>
 </body>
 </html>
