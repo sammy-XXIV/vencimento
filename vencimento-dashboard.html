@@ -124,7 +124,7 @@
       <div id="page-overview">
       <header class="topbar">
         <div><p class="eyebrow" id="shopGreeting">Cash-flow workspace</p><h1>Cash before<br>it becomes a problem.</h1><div class="date" id="todayLabel">For small Brazilian shops that pay suppliers in wBRL on Celo.</div></div>
-        <div class="wallet"><span class="dot"></span> Wallet connected · <strong>0x71…a42f</strong></div>
+        <div class="wallet" id="walletBadge" style="display:none"><span class="dot"></span> Wallet connected · <strong id="walletBadgeAddr"></strong></div>
       </header>
 
       <section class="grid" aria-label="Shop snapshot">
@@ -350,6 +350,9 @@
       if (walletInput && !walletInput.value) walletInput.value = address;
       const root = document.querySelector('#privy-login-root');
       if (root) root.dataset.connected = '1';
+      const badge = document.querySelector('#walletBadge');
+      const badgeAddr = document.querySelector('#walletBadgeAddr');
+      if (badge && badgeAddr) { badgeAddr.textContent = label; badge.style.display = ''; }
     }
 
     function LoginWidget() {
