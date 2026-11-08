@@ -15,6 +15,8 @@ Vencimento is a cash-flow agent for small Brazilian shops. It reads supplier bil
 - Sender: `0x95149bf6b2caAC09DEBF4Af96Ce5AC94aBdB24E1`
 - Recipient: `0x145aAF98DC340f64146b7eE1EE4347F9d88D90bD`
 - Receipt status: successful (`0x1`); calldata includes the Loops attribution tag `celo_29cc419a3735`.
+- Additional 0.1 wBRL payment: https://celoscan.io/tx/0x9457f684df87b816c46bf687e36d41183e002a5abed8b2c2031f809793d165a6
+- Additional 0.1 wBRL payment: https://celoscan.io/tx/0xd53a28f4437538b546cdc499b6f6d4d18ebc392e8df729edca0c3227c8a8ba5c
 
 ## Current flow
 
