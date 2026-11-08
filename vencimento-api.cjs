@@ -41,7 +41,7 @@ function createApi({ dataFile = null, sendTransfer = sendWbrlTransfer } = {}) {
       if (method === 'GET' && path === '/api/health') return response(200, { ok: true });
       if (method === 'GET' && path === '/api/state') return response(200, serializeState(state));
       if (method === 'GET' && path === '/api/evidence') {
-        return response(200, JSON.parse(fs.readFileSync(path.join(__dirname, 'payment-evidence.json'), 'utf8')));
+        return response(200, JSON.parse(fs.readFileSync(require('node:path').join(__dirname, 'payment-evidence.json'), 'utf8')));
       }
       if (method === 'POST' && path === '/api/scheduler') {
         state.scheduler.enabled = payload.enabled === true;

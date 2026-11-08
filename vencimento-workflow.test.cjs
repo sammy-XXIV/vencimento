@@ -14,6 +14,7 @@ const { createApi } = require('./vencimento-api.cjs');
     return { hash: '0x' + 'a'.repeat(64), amount, recipient };
   } });
   const post = (route, data) => api.request('POST', route, data);
+  assert.equal((await api.request('GET', '/api/evidence')).body.payments.length, 3);
   await post('/api/config', { shopName: 'Test', wallet: '0x' + '1'.repeat(40), balance: '1000000000000000000', reserve: '500000000000000000', dailySpendCap: '100000000000000000' });
   await post('/api/suppliers', { id: 's', name: 'Supplier', wallet: '0x' + '2'.repeat(40) });
   for (const id of ['a', 'b']) await post('/api/bills', { id, supplierId: 's', amount: '100000000000000000', dueDate: '2026-11-08' });
