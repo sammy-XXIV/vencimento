@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vencimento — cash before it becomes a problem</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+    :root {
+      --ink: #18232b;
+      --muted: #6d7778;
+      --paper: #f5f3ed;
+      --card: #fffdf8;
+      --line: #dddcd3;
+      --green: #1e7a62;
+      --green-soft: #e4f0e9;
+      --amber: #d9782f;
+      --amber-soft: #fff0df;
+      --blue: #426d89;
+      --shadow: 0 18px 50px rgba(24, 35, 43, .08);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: 'DM Sans', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    button { font: inherit; cursor: pointer; }
+    .shell { min-height: 100vh; display: grid; grid-template-columns: 248px 1fr; }
+    aside { padding: 28px 20px; border-right: 1px solid var(--line); background: #eeece4; }
+    .brand { display: flex; gap: 11px; align-items: center; margin: 0 10px 58px; font-weight: 800; letter-spacing: -.04em; font-size: 20px; }
+    .mark { width: 30px; height: 30px; display: grid; place-items: center; background: var(--green); color: white; border-radius: 9px 9px 9px 2px; font-size: 14px; }
+    nav { display: grid; gap: 6px; }
+    nav button { border: 0; text-align: left; background: transparent; color: var(--muted); padding: 12px 14px; border-radius: 10px; font-size: 14px; }
+    nav button.active, nav button:hover { color: var(--ink); background: #e2e0d7; }
+    .side-note { position: absolute; bottom: 26px; width: 196px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    main { max-width: 1400px; width: 100%; padding: 34px clamp(24px, 5vw, 72px) 70px; }
+    .topbar { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+    .eyebrow { margin: 0 0 9px; color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(31px, 4vw, 50px); font-weight: 500; letter-spacing: -.055em; line-height: .98; }
+    .date { color: var(--muted); font-size: 13px; padding-top: 7px; }
+    .wallet { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 8px 12px 8px 9px; color: var(--muted); font-size: 12px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
+    .grid { display: grid; grid-template-columns: 1.4fr .8fr .8fr; gap: 16px; margin-top: 32px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+    .metric { padding: 21px 23px; min-height: 130px; }
+    .metric-label { color: var(--muted); font-size: 12px; }
+    .metric-value { margin-top: 16px; font-size: 28px; letter-spacing: -.06em; }
+    .metric-value small { font-size: 14px; color: var(--muted); letter-spacing: 0; }
+    .balance { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+    .reserve { color: var(--amber); font-size: 12px; text-align: right; }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin: 42px 0 13px; }
+    h2 { margin: 0; font-size: 17px; letter-spacing: -.03em; }
+    .section-head p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .pill { border: 1px solid var(--line); border-radius: 999px; padding: 7px 10px; color: var(--muted); font-size: 11px; background: var(--card); }
+    .plan { overflow: hidden; }
+    .plan-row { display: grid; grid-template-columns: 1.6fr .9fr .8fr 1.35fr; gap: 20px; align-items: center; padding: 17px 21px; border-top: 1px solid var(--line); }
+    .plan-row:first-child { border-top: 0; }
+    .plan-row.header { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; background: #faf8f1; }
+    .supplier { display: flex; align-items: center; gap: 12px; }
+    .supplier-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: var(--green-soft); color: var(--green); font-size: 12px; font-weight: 800; }
+    .supplier strong { display: block; font-size: 14px; }
+    .supplier span, .cell-sub { color: var(--muted); font-size: 11px; }
+    .amount { font-weight: 700; font-size: 14px; }
+    .status { display: inline-flex; width: fit-content; border-radius: 99px; padding: 6px 9px; font-size: 11px; font-weight: 700; }
+    .status.pay { color: var(--green); background: var(--green-soft); }
+    .status.delay { color: #a65018; background: var(--amber-soft); }
+    .reason { margin-top: 6px; font-size: 11px; line-height: 1.35; color: var(--muted); }
+    .action { border: 0; color: white; background: var(--green); padding: 11px 14px; border-radius: 9px; font-size: 12px; font-weight: 800; }
+    .action:hover { background: #155f4d; }
+    .action:disabled { color: #89938e; background: #d9ddd8; cursor: not-allowed; }
+    .plan .action { display: none; }
+    .pay-bar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 21px; background: #edf5ef; border: 1px solid #c5dfd2; border-radius: 14px; margin-top: 14px; }
+    .pay-bar strong { display: block; font-size: 14px; }
+    .pay-bar span { display: block; margin-top: 4px; color: #5d7770; font-size: 12px; }
+    .batch-total { text-align: right; white-space: nowrap; }
+    .batch-total b { display: block; color: var(--green); font-size: 18px; letter-spacing: -.04em; }
+    .batch-total small { color: #5d7770; font-size: 10px; }
+    .batch-button { border: 0; border-radius: 9px; padding: 12px 16px; color: #fff; background: var(--green); font-size: 12px; font-weight: 800; }
+    .batch-button:hover { background: #155f4d; }
+    .batch-button.done { background: #7a9188; }
+    .bottom-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; margin-top: 16px; }
+    .panel { padding: 22px; }
+    .setup-card { margin-top: 24px; box-shadow: none; }
+    .setup-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
+    .setup-grid label { display: grid; gap: 7px; color: var(--muted); font-size: 11px; }
+    .setup-grid input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px; color: var(--ink); background: #fff; font: inherit; font-size: 12px; }
+    .setup-grid input:focus { outline: 2px solid #9bcdb3; outline-offset: 1px; }
+    .setup-card.saved { display: none; }
+    .data-entry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+    .data-entry .panel { box-shadow: none; }
+    .data-entry h3 { margin: 0 0 5px; font-size: 15px; letter-spacing: -.03em; }
+    .review-card { margin-top: 16px; padding: 20px 24px; border: 1px solid var(--line); border-radius: 18px; background: #fffdf8; }
+    .review-row { display: grid; grid-template-columns: 1.1fr 1.2fr .7fr .9fr; gap: 16px; padding: 13px 0; border-top: 1px solid var(--line); align-items: center; }
+    .review-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; }
+    .review-wallet { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; word-break: break-all; }
+    @media (max-width: 900px) { .review-row { grid-template-columns: 1fr 1fr; } }
+    .form-stack { display: grid; gap: 10px; margin-top: 17px; }
+    .form-stack label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; }
+    .form-stack input, .form-stack select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px; color: var(--ink); background: #fff; font: inherit; font-size: 12px; }
+    .form-stack input:focus, .form-stack select:focus { outline: 2px solid #9bcdb3; outline-offset: 1px; }
+    .inflow { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-top: 1px solid var(--line); }
+    .inflow:first-of-type { margin-top: 17px; }
+    .inflow strong { font-size: 14px; }
+    .inflow span { color: var(--muted); font-size: 11px; }
+    .receipt { display: flex; justify-content: space-between; gap: 15px; padding: 12px 0; border-top: 1px solid var(--line); }
+    .receipt a { color: var(--blue); font-size: 11px; }
+    .empty { display: none; padding: 18px; color: var(--green); background: var(--green-soft); border: 1px solid #c5dfd2; border-radius: 10px; margin-top: 14px; font-size: 13px; }
+    @media (max-width: 900px) { .shell { display: block; } aside { position: static; padding: 18px 20px; border-right: 0; border-bottom: 1px solid var(--line); } .brand { margin-bottom: 15px; } nav { display: flex; overflow: auto; } .side-note { display: none; } main { padding: 30px 18px 50px; } .grid, .bottom-grid, .data-entry { grid-template-columns: 1fr; } .plan { overflow-x: auto; } .plan-row { min-width: 760px; } .setup-grid { grid-template-columns: 1fr 1fr; } }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand"><span class="mark">V</span> vencimento</div>
+      <nav aria-label="Primary navigation">
+        <button class="active">Overview</button>
+        <button>Bills</button>
+        <button>Suppliers</button>
+        <button>Receipts</button>
+      </nav>
+      <div class="side-note">A calm cash plan for busy shops.<br><br><strong>Connected to Celo</strong><br>wBRL · mainnet</div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <div><p class="eyebrow" id="shopGreeting">Cash-flow workspace</p><h1>Cash before<br>it becomes a problem.</h1><div class="date" id="todayLabel">Configure your shop to begin.</div></div>
+        <div class="wallet"><span class="dot"></span> Wallet connected · <strong>0x71…a42f</strong></div>
+      </header>
+
+      <section class="grid" aria-label="Shop snapshot">
+        <div class="card metric"><div class="metric-label">Available to plan</div><div class="balance"><div class="metric-value" id="balanceValue">— <small>wBRL</small></div><div class="reserve" id="reserveValue">—<br><span>cash floor</span></div></div></div>
+        <div class="card metric"><div class="metric-label">Bills due</div><div class="metric-value" id="billsValue">—</div></div>
+        <div class="card metric"><div class="metric-label">Expected inflow</div><div class="metric-value" id="inflowValue">—</div></div>
+      </section>
+
+      <section class="card panel setup-card" id="setupCard"><h2>Set up your shop</h2><p class="section-head" style="margin:5px 0 18px"><span class="cell-sub">Your data stays behind the payment plan.</span></p><form id="setupForm"><div class="setup-grid"><label>Shop name<input name="shopName" required placeholder="Casa Aurora"></label><label>Agent wallet<input name="wallet" required placeholder="0x…"></label><label>Current wBRL balance<input name="balance" required type="number" min="0" placeholder="1000"></label><label>Cash floor<input name="reserve" required type="number" min="0" placeholder="300"></label><label>Daily cap<input name="dailySpendCap" required type="number" min="1" placeholder="3000"></label></div><button class="batch-button" type="submit">Save shop settings</button></form></section>
+
+      <section class="data-entry" id="dataEntry">
+        <div class="card panel"><h3>Add a supplier</h3><span class="cell-sub">Only whitelisted wallets can be paid.</span><form class="form-stack" id="supplierForm"><label>Supplier name<input name="name" required placeholder="Supplier name"></label><label>Supplier wallet<input name="wallet" required placeholder="0x…"></label><label>Priority<input name="priority" required type="number" min="1" value="1"></label><button class="batch-button" type="submit">Save supplier</button></form></div>
+        <div class="card panel"><h3>Add a bill</h3><span class="cell-sub">The planner pays bills in full or delays them.</span><form class="form-stack" id="billForm"><label>Supplier<select name="supplierId" id="supplierSelect" required><option value="">Add a supplier first</option></select></label><label>Amount in wBRL<input name="amount" required type="number" min="1" placeholder="0"></label><label>Due date<input name="dueDate" required type="date"></label><label>Grace days<input name="graceDays" required type="number" min="0" value="0"></label><button class="batch-button" type="submit">Save bill</button></form></div>
+        <div class="card panel"><h3>Add expected money in</h3><span class="cell-sub">Manual inflows keep the decision explainable.</span><form class="form-stack" id="inflowForm"><label>Amount in wBRL<input name="amount" required type="number" min="1" placeholder="0"></label><label>Expected date<input name="expectedDate" required type="date"></label><button class="batch-button" type="submit">Save inflow</button></form></div>
+      </section>
+
+      <div class="section-head"><div><h2>Today’s payment plan</h2><p>Vencimento ranked these bills using your rules and cash floor.</p></div><span class="pill">Last checked 09:42</span></div>
+      <section class="card plan" aria-label="Payment plan">
+        <div class="plan-row header"><div>Supplier</div><div>Due</div><div>Amount</div><div>Decision</div></div>
+        <div id="planRows"><div class="plan-row"><div class="cell-sub" style="grid-column:1/-1">Configure your shop to generate a payment plan.</div></div></div>
+      </section>
+      <div class="pay-bar" aria-label="Payment batch approval">
+        <div><strong id="batchTitle">No payment batch yet</strong><span id="batchSubtitle">Configure your shop first.</span></div>
+        <div class="batch-total"><b id="batchTotal">—</b><small id="batchMeta">wBRL</small></div>
+        <button class="batch-button" id="approveBatch" disabled>Approve payment batch</button>
+      </div>
+      <section class="review-card" aria-label="Owner payment review">
+        <div class="section-head" style="margin:0 0 14px"><div><h2>Owner review</h2><p>Check the recipient wallet and exact amount before approving.</p></div><span class="pill" id="reviewStatus">Not ready</span></div>
+        <div id="reviewRows"><div class="cell-sub">Generate a payment plan to review transfers.</div></div>
+      </section>
+      <div class="empty" id="success"></div>
+
+      <section class="bottom-grid">
+        <div class="card panel"><h2>Expected money in</h2><p class="section-head" style="margin:5px 0 0"><span class="cell-sub">Entered by you · no guessing</span><span class="pill" id="inflowPill">—</span></p><div id="inflowRows"></div></div>
+        <div class="card panel"><h2>Recent receipts</h2><div id="receiptRows" class="receipt-list" style="margin-top:17px"></div></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const API = window.location.origin;
+    const success = document.querySelector('#success');
+    const batch = document.querySelector('#approveBatch');
+    const setupCard = document.querySelector('#setupCard');
+    const reviewStatus = document.querySelector('#reviewStatus');
+    let currentPlan = null;
+    let currentReviewToken = null;
+
+    async function callApi(path, options = {}) {
+      const response = await fetch(API + path, { headers: { 'content-type': 'application/json' }, ...options });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || `API error ${response.status}`);
+      return body;
+    }
+
+    const money = (value) => `R$ ${Number(value).toLocaleString('pt-BR')}`;
+    const initials = (name) => name.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase();
+
+    function renderState(state) {
+      document.querySelector('#shopGreeting').textContent = state.shop ? `Good morning, ${state.shop.name}` : 'Cash-flow workspace';
+      document.querySelector('#todayLabel').textContent = state.shop ? `${state.bills.length} bills loaded · wallet ${state.shop.wallet.slice(0, 6)}…${state.shop.wallet.slice(-4)}` : 'Configure your shop to begin.';
+      document.querySelector('#balanceValue').innerHTML = state.balance === null ? '— <small>wBRL</small>' : `${money(state.balance)} <small>wBRL</small>`;
+      document.querySelector('#reserveValue').innerHTML = state.reserve === null ? '—<br><span>cash floor</span>' : `${money(state.reserve)}<br><span>cash floor</span>`;
+      document.querySelector('#billsValue').textContent = state.bills.length ? money(state.bills.reduce((sum, bill) => sum + Number(bill.amount), 0)) : '—';
+      document.querySelector('#inflowValue').textContent = state.inflows.length ? money(state.inflows.reduce((sum, inflow) => sum + Number(inflow.amount), 0)) : '—';
+      document.querySelector('#inflowPill').textContent = state.inflows.length ? `+ ${money(state.inflows.reduce((sum, inflow) => sum + Number(inflow.amount), 0))}` : '—';
+      document.querySelector('#inflowRows').innerHTML = state.inflows.length ? state.inflows.map((inflow) => `<div class="inflow"><div><strong>Expected customer payment</strong><br><span>${inflow.expectedDate}</span></div><strong>${money(inflow.amount)}</strong></div>`).join('') : '<div class="cell-sub" style="margin-top:18px">No expected inflows entered.</div>';
+      const supplierSelect = document.querySelector('#supplierSelect');
+      supplierSelect.innerHTML = state.suppliers.length ? state.suppliers.map((supplier) => `<option value="${supplier.id}">${supplier.name} · priority ${supplier.priority}</option>`).join('') : '<option value="">Add a supplier first</option>';
+      supplierSelect.disabled = !state.suppliers.length;
+      document.querySelector('#receiptRows').innerHTML = state.approvedBills.length ? state.approvedBills.map((billId) => `<div class="receipt"><div><strong>Payment approved</strong><br><span class="cell-sub">${billId}</span></div><div style="text-align:right"><span class="cell-sub">Awaiting chain review</span></div></div>`).join('') : '<div class="cell-sub">No supplier payments approved yet.</div>';
+    }
+
+    function renderPlan(plan) {
+      currentPlan = plan;
+      const items = [...plan.payments.map((bill) => ({ ...bill, decision: 'Pay now', kind: 'pay', reason: 'Selected by your cash rules.' })), ...plan.delayed.map((bill) => ({ ...bill, decision: 'Delay', kind: 'delay', reason: bill.reason }))];
+      document.querySelector('#planRows').innerHTML = items.length ? items.map((bill) => `<div class="plan-row" data-bill="${bill.id}"><div class="supplier"><div class="supplier-icon ${bill.kind === 'delay' ? 'delay-icon' : ''}">${initials(bill.supplier)}</div><div><strong>${bill.supplier}</strong><span>due ${bill.dueDate} · priority ${bill.priority}</span></div></div><div class="cell-sub">${bill.dueDate}</div><div class="amount">${money(bill.amount)}</div><div><span class="status ${bill.kind}">${bill.decision}</span><div class="reason">${bill.reason}</div></div></div>`).join('') : '<div class="plan-row"><div class="cell-sub" style="grid-column:1/-1">No bills entered yet.</div></div>';
+      const total = plan.payments.reduce((sum, bill) => sum + Number(bill.amount), 0);
+      document.querySelector('#batchTitle').textContent = plan.payments.length ? `Ready to approve ${plan.payments.length} payment${plan.payments.length === 1 ? '' : 's'}` : 'No payment batch yet';
+      document.querySelector('#batchSubtitle').textContent = plan.payments.length ? `Reserve protected at ${money(plan.remainingBalance)} after payment.` : 'No bills are ready to pay.';
+      document.querySelector('#batchTotal').textContent = plan.payments.length ? money(total) : '—';
+      document.querySelector('#batchMeta').textContent = plan.payments.length ? `${plan.payments.length} supplier transfer${plan.payments.length === 1 ? '' : 's'} · wBRL` : 'wBRL';
+      batch.disabled = !plan.payments.length;
+    }
+
+    function renderReview(review) {
+      currentReviewToken = review.reviewToken;
+      reviewStatus.textContent = review.transfers.length ? 'Review required' : 'No payments';
+      document.querySelector('#reviewRows').innerHTML = review.transfers.length ? `<div class="review-row review-label"><div>Supplier</div><div>Recipient wallet</div><div>Amount</div><div>Balance after</div></div>${review.transfers.map((item) => `<div class="review-row"><div><strong>${item.supplier}</strong><br><span class="cell-sub">${item.billId}</span></div><div class="review-wallet">${item.supplierWallet}</div><div><strong>${money(item.amount)} wBRL</strong></div><div><strong>${money(item.remainingBalance)} wBRL</strong></div></div>`).join('')}` : '<div class="cell-sub">No payments are currently eligible.</div>';
+    }
+
+    async function refresh() {
+      const state = await callApi('/api/state');
+      renderState(state);
+      if (!state.shop) { setupCard.classList.remove('saved'); return; }
+      setupCard.classList.add('saved');
+      const plan = await callApi('/api/plan', { method: 'POST', body: '{}' });
+      renderPlan(plan);
+      renderReview(await callApi('/api/payment-batches/review'));
+    }
+
+    document.querySelector('#setupForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      try { await callApi('/api/config', { method: 'POST', body: JSON.stringify(data) }); success.textContent = 'Shop settings saved. Add suppliers, bills, and inflows below.'; success.style.display = 'block'; await refresh(); }
+      catch (error) { success.textContent = error.message; success.style.display = 'block'; }
+    });
+
+    document.querySelector('#supplierForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      try { await callApi('/api/suppliers', { method: 'POST', body: JSON.stringify({ ...data, id: `supplier-${crypto.randomUUID()}` }) }); event.currentTarget.reset(); success.textContent = 'Supplier saved.'; success.style.display = 'block'; await refresh(); }
+      catch (error) { success.textContent = error.message; success.style.display = 'block'; }
+    });
+
+    document.querySelector('#billForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      try { await callApi('/api/bills', { method: 'POST', body: JSON.stringify({ ...data, id: `bill-${crypto.randomUUID()}` }) }); event.currentTarget.reset(); success.textContent = 'Bill saved. Recalculating the plan.'; success.style.display = 'block'; await refresh(); }
+      catch (error) { success.textContent = error.message; success.style.display = 'block'; }
+    });
+
+    document.querySelector('#inflowForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      try { await callApi('/api/inflows', { method: 'POST', body: JSON.stringify(data) }); event.currentTarget.reset(); success.textContent = 'Expected inflow saved.'; success.style.display = 'block'; await refresh(); }
+      catch (error) { success.textContent = error.message; success.style.display = 'block'; }
+    });
+
+    batch.addEventListener('click', async () => {
+      batch.disabled = true; batch.textContent = 'Approving…';
+      try { await callApi('/api/payment-batches/approve', { method: 'POST', body: JSON.stringify({ billIds: currentPlan.payments.map((bill) => bill.id), reviewToken: currentReviewToken }) }); batch.classList.add('done'); batch.textContent = 'Batch approved'; success.textContent = 'Batch approved and encoded for Celo. Funds remain untouched until the guarded submit step.'; success.style.display = 'block'; }
+      catch (error) { batch.disabled = false; batch.textContent = 'Approve payment batch'; success.textContent = error.message; success.style.display = 'block'; }
+    });
+
+    refresh().catch((error) => { success.textContent = `Backend offline: ${error.message}`; success.style.display = 'block'; });
+  </script>
+</body>
+</html>

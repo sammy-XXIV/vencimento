@@ -1,0 +1,28 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "Vencimento",
+  "description": "An AI cash-flow agent that helps small Brazilian shops prioritize supplier bills, protect a cash reserve, and pay approved suppliers in wBRL on Celo.",
+  "services": [
+    {
+      "name": "web",
+      "endpoint": "https://levanter-production-4b47.up.railway.app"
+    },
+    {
+      "name": "dashboard",
+      "endpoint": "https://levanter-production-4b47.up.railway.app/dashboard"
+    },
+    {
+      "name": "wallet",
+      "endpoint": "0x95149bf6b2caAC09DEBF4Af96Ce5AC94aBdB24E1"
+    }
+  ],
+  "x402Support": false,
+  "active": true,
+  "supportedTrust": ["reputation"],
+  "registrations": [
+    {
+      "agentId": 10054,
+      "agentRegistry": "eip155:42220:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+    }
+  ]
+}

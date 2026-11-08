@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.*
+!.env.example
+vencimento-state.json
+vencimento-state.json.tmp
+.kite-passport/

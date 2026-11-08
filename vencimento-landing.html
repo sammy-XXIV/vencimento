@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vencimento — pay what matters, on time</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+    :root { --ink:#13252a; --cream:#f5f2e9; --green:#145b48; --mint:#d9eee2; --orange:#e58b49; --line:rgba(19,37,42,.18); --white:#fffdf7; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; color:var(--ink); background:var(--cream); font-family:'DM Sans',Inter,ui-sans-serif,system-ui,sans-serif; overflow-x:hidden; }
+    a { color:inherit; text-decoration:none; }
+    .wrap { max-width:1180px; margin:auto; padding:0 28px; }
+    header { display:flex; align-items:center; justify-content:space-between; padding:25px 0; }
+    .logo { display:flex; align-items:center; gap:10px; font-weight:850; letter-spacing:-.05em; font-size:20px; }
+    .glyph { width:30px; height:30px; display:grid; place-items:center; color:#fff; background:var(--green); border-radius:9px 9px 9px 2px; font-size:13px; }
+    .nav { display:flex; align-items:center; gap:25px; color:#52615f; font-size:13px; }
+    .nav .login { color:var(--ink); font-weight:750; }
+    .hero { padding:83px 0 100px; display:grid; grid-template-columns:1.02fr .98fr; align-items:center; gap:80px; }
+    .kicker { color:var(--green); text-transform:uppercase; letter-spacing:.15em; font:400 14px 'Bebas Neue',sans-serif; }
+    h1 { max-width:650px; margin:17px 0 25px; font:500 clamp(52px,7vw,88px)/.91 Georgia,serif; letter-spacing:-.075em; }
+    .hero-copy { max-width:480px; color:#5d6968; font-size:17px; line-height:1.55; }
+    .buttons { display:flex; align-items:center; gap:14px; margin-top:31px; }
+    .button { display:inline-flex; align-items:center; justify-content:center; border-radius:8px; padding:13px 17px; font-size:13px; font-weight:800; }
+    .primary { color:#fff; background:var(--green); box-shadow:0 8px 24px rgba(20,91,72,.18); }
+    .secondary { border:1px solid var(--line); background:transparent; }
+    .proof { margin-top:18px; color:#7b8581; font-size:11px; }
+    .visual { position:relative; isolation:isolate; }
+    .visual:before { content:""; position:absolute; width:350px; height:350px; right:-42px; top:-45px; border-radius:50%; background:radial-gradient(circle, rgba(217,238,226,.9) 0 2px, transparent 3px); background-size:18px 18px; opacity:.9; z-index:-2; animation:drift 16s linear infinite; }
+    .signal { position:absolute; z-index:2; display:flex; align-items:center; gap:7px; padding:8px 10px; border:1px solid rgba(20,91,72,.24); border-radius:99px; color:var(--green); background:rgba(255,253,247,.83); box-shadow:0 8px 20px rgba(20,91,72,.1); font-size:10px; font-weight:850; letter-spacing:.08em; text-transform:uppercase; backdrop-filter:blur(7px); }
+    .signal:before { content:""; width:6px; height:6px; border-radius:50%; background:var(--orange); box-shadow:0 0 0 4px rgba(229,139,73,.16); }
+    .signal-a { left:-28px; top:27%; animation:floatA 5.5s ease-in-out infinite; }
+    .signal-b { right:-24px; bottom:18%; animation:floatB 6.5s ease-in-out infinite; }
+    .ledger { position:relative; padding:22px; border:1px solid var(--line); border-radius:19px; background:var(--white); box-shadow:0 22px 55px rgba(24,42,42,.12); transform:rotate(1.4deg); animation:ledgerIn .9s cubic-bezier(.2,.8,.2,1) both, ledgerFloat 7s ease-in-out 1s infinite; }
+    .ledger:before { content:""; position:absolute; left:30px; top:0; bottom:0; width:1px; background:#efc7b3; }
+    .ledger-top { display:flex; align-items:center; justify-content:space-between; padding:3px 7px 22px 35px; border-bottom:1px solid var(--line); }
+    .ledger-title { font:500 23px Georgia,serif; letter-spacing:-.04em; }
+    .ledger-date { color:#7b8581; font-size:10px; text-transform:uppercase; letter-spacing:.12em; }
+    .row { display:grid; grid-template-columns:1fr auto; gap:15px; padding:18px 7px 18px 35px; border-bottom:1px solid rgba(19,37,42,.11); animation:rowIn .65s cubic-bezier(.2,.8,.2,1) both; }
+    .row:nth-child(2) { animation-delay:.16s; } .row:nth-child(3) { animation-delay:.29s; } .row:nth-child(4) { animation-delay:.42s; }
+    .row:last-child { border-bottom:0; }
+    .row strong { display:block; font-size:13px; }
+    .row span { color:#78817f; font-size:11px; }
+    .row .amount { font-weight:800; font-size:14px; }
+    .row .tag { display:inline-flex; margin-top:8px; border-radius:20px; padding:4px 7px; font-size:10px; font-weight:800; }
+    .pay { color:var(--green); background:var(--mint); }
+    .wait { color:#a65720; background:#ffead7; }
+    .stamp { position:absolute; right:18px; bottom:18px; border:2px solid var(--orange); color:#bd6529; border-radius:7px; padding:7px 10px; font-size:10px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; transform:rotate(-8deg); }
+    .flow-graphic { position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:38px 12px 0; padding:18px 0 3px; }
+    .flow-graphic:before { content:""; position:absolute; left:12%; right:12%; top:31px; height:2px; background:linear-gradient(90deg,var(--green) 0 66%,#e8d3c6 66%); opacity:.75; }
+    .flow-node { position:relative; z-index:1; text-align:center; }
+    .flow-node .node { width:28px; height:28px; margin:0 auto 10px; display:grid; place-items:center; border:2px solid var(--green); border-radius:50%; color:var(--green); background:var(--cream); font-size:11px; font-weight:900; }
+    .flow-node:last-child .node { border-color:var(--orange); color:#bd6529; }
+    .flow-node strong { display:block; font:400 15px 'Bebas Neue',sans-serif; letter-spacing:.05em; }
+    .flow-node span { color:#7b8581; font-size:10px; }
+    .flow-token { position:absolute; z-index:2; top:25px; left:11%; width:13px; height:13px; border-radius:50%; background:var(--orange); box-shadow:0 0 0 5px rgba(229,139,73,.16); animation:flowToken 4.8s cubic-bezier(.65,0,.35,1) infinite; }
+    .band { padding:17px 0; color:#e9f4ee; background:var(--green); }
+    .band-inner { display:flex; align-items:center; justify-content:space-between; gap:30px; }
+    .band strong { font-size:13px; letter-spacing:.01em; }
+    .band span { color:#afd1be; font-size:12px; }
+    section { padding:100px 0; }
+    .section-intro { max-width:550px; }
+    h2 { margin:13px 0 16px; font:500 clamp(34px,4vw,54px)/1 Georgia,serif; letter-spacing:-.06em; }
+    .intro-copy { color:#677370; line-height:1.55; font-size:15px; }
+    .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; margin-top:55px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .step { min-height:220px; padding:26px 24px 30px 0; border-right:1px solid var(--line); }
+    .step:not(:first-child) { padding-left:24px; }
+    .step:last-child { border-right:0; }
+    .step-num { color:var(--orange); font-weight:900; font-size:12px; }
+    .step h3 { margin:43px 0 9px; font-size:18px; letter-spacing:-.04em; }
+    .step p { margin:0; color:#697571; font-size:13px; line-height:1.5; }
+    .feature { color:#ebf5ee; background:var(--ink); }
+    .feature-grid { display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:90px; }
+    .feature h2 { color:#f6f3e9; }
+    .feature .intro-copy { color:#aab9b1; }
+    .rule-card { border:1px solid rgba(233,244,238,.2); border-radius:14px; padding:24px; background:rgba(255,255,255,.04); }
+    .rule-card p { margin:0 0 18px; color:#aab9b1; font-size:11px; text-transform:uppercase; letter-spacing:.13em; }
+    .rule { display:flex; justify-content:space-between; gap:20px; padding:16px 0; border-top:1px solid rgba(233,244,238,.14); font-size:14px; }
+    .rule span { color:#8fa69b; font-size:12px; }
+    .footer { display:flex; justify-content:space-between; gap:20px; padding:25px 0 35px; color:#7b8581; font-size:11px; border-top:1px solid var(--line); }
+    @keyframes ledgerIn { from { opacity:0; transform:translateY(24px) rotate(4deg); } to { opacity:1; transform:translateY(0) rotate(1.4deg); } }
+    @keyframes rowIn { from { opacity:0; transform:translateX(14px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes ledgerFloat { 0%,100% { transform:translateY(0) rotate(1.4deg); } 50% { transform:translateY(-8px) rotate(.6deg); } }
+    @keyframes floatA { 0%,100% { transform:translate(0,0) rotate(-3deg); } 50% { transform:translate(9px,-13px) rotate(3deg); } }
+    @keyframes floatB { 0%,100% { transform:translate(0,0) rotate(3deg); } 50% { transform:translate(-9px,12px) rotate(-3deg); } }
+    @keyframes drift { to { transform:rotate(360deg); } }
+    @keyframes flowToken { 0%,8% { left:11%; opacity:0; } 15% { opacity:1; } 44% { left:46%; } 58% { left:46%; } 88% { left:80%; } 95%,100% { left:80%; opacity:0; } }
+    @media (max-width:820px) { .hero,.feature-grid { grid-template-columns:1fr; gap:48px; padding-top:55px; } .hero { padding-bottom:70px; } .steps { grid-template-columns:1fr; } .step,.step:not(:first-child) { padding:24px 0; border-right:0; border-bottom:1px solid var(--line); } .step:last-child { border-bottom:0; } .band-inner { align-items:flex-start; flex-direction:column; gap:6px; } .nav { gap:12px; } .nav a:not(.login) { display:none; } .signal-a { left:-4px; } .signal-b { right:-4px; } }
+    @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *, *:before, *:after { animation-duration:.01ms !important; animation-iteration-count:1 !important; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="logo" href="vencimento-landing.html"><span class="glyph">V</span> vencimento</a>
+      <nav class="nav"><a href="#how">How it works</a><a href="#rules">Guardrails</a><a class="login" href="vencimento-dashboard.html">Open dashboard →</a></nav>
+    </header>
+    <main>
+      <section class="hero">
+        <div>
+          <div class="kicker">Cash-flow agent for Brazilian shops</div>
+          <h1>Pay what matters. Keep the lights on.</h1>
+          <p class="hero-copy">Vencimento turns supplier bills, due dates, and uneven customer payments into one calm payment plan—settled in wBRL on Celo.</p>
+          <div class="buttons"><a class="button primary" href="vencimento-dashboard.html">See the shop dashboard ↗</a><a class="button secondary" href="#how">See how it works</a></div>
+          <div class="proof">Built for owners who cannot afford a surprise at the end of the week.</div>
+        </div>
+        <div class="visual">
+        <div class="signal signal-a">wBRL balance</div><div class="signal signal-b">settled on Celo</div>
+        <div class="ledger" aria-label="Example payment plan">
+          <div class="ledger-top"><div class="ledger-title">Casa Aurora</div><div class="ledger-date">04 Nov 2026</div></div>
+          <div class="row"><div><strong>Distribuidora Sul</strong><span>due tomorrow · priority 1</span><br><em class="tag pay">pay now</em></div><div class="amount">R$ 500</div></div>
+          <div class="row"><div><strong>Embalagens Maia</strong><span>due today · priority 2</span><br><em class="tag pay">pay now</em></div><div class="amount">R$ 200</div></div>
+          <div class="row"><div><strong>Enel utilities</strong><span>5-day grace period</span><br><em class="tag wait">wait for inflow</em></div><div class="amount">R$ 300</div></div>
+          <div class="stamp">wBRL · Celo</div>
+        </div>
+        <div class="flow-graphic" aria-label="Cash flow from balance to rules to settlement">
+          <div class="flow-token"></div>
+          <div class="flow-node"><div class="node">$</div><strong>Balance</strong><span>R$ 1,000</span></div>
+          <div class="flow-node"><div class="node">✓</div><strong>Rules</strong><span>priority + floor</span></div>
+          <div class="flow-node"><div class="node">↗</div><strong>Settlement</strong><span>on Celo</span></div>
+        </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="band"><div class="wrap band-inner"><strong>No black box. Every decision has a reason.</strong><span>Owner approval · reserve floor · whitelisted suppliers</span></div></div>
+  <div class="wrap">
+    <section id="how">
+      <div class="section-intro"><div class="kicker">The weekly rhythm</div><h2>From a pile of bills to a plan you can trust.</h2><p class="intro-copy">The agent watches the calendar, not just the balance. It pays in full when it can, waits when it should, and leaves a receipt when money moves.</p></div>
+      <div class="steps"><article class="step"><div class="step-num">01 / SEE</div><h3>Bring the bills together</h3><p>Enter supplier, amount, due date, grace period, and the wallet that is allowed to receive payment.</p></article><article class="step"><div class="step-num">02 / DECIDE</div><h3>Set the owner’s rules</h3><p>Choose your cash floor, daily cap, and who gets paid first when this week is tighter than expected.</p></article><article class="step"><div class="step-num">03 / SETTLE</div><h3>Approve and prove</h3><p>Review the proposed batch, approve it, and send wBRL on Celo. Every supplier gets a transaction receipt.</p></article></div>
+    </section>
+  </div>
+  <section class="feature" id="rules"><div class="wrap feature-grid"><div><div class="kicker" style="color:#8fd3ad">The guardrails</div><h2>Automation with a hand on the till.</h2><p class="intro-copy">Vencimento can rank the bills, but it cannot invent a supplier or quietly spend the reserve. The owner stays in control of the decisions that matter.</p></div><div class="rule-card"><p>Casa Aurora policy</p><div class="rule"><strong>Cash floor</strong><span>R$ 300 always stays put</span></div><div class="rule"><strong>Daily cap</strong><span>R$ 3,000 maximum</span></div><div class="rule"><strong>Supplier list</strong><span>Verified wallets only</span></div><div class="rule"><strong>Approval</strong><span>Required before payment</span></div></div></div></section>
+  <div class="wrap"><footer><span>Vencimento · wBRL on Celo</span><span>Pay clearly. Keep moving.</span></footer></div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "vencimento",
+  "private": true,
+  "version": "0.1.0",
+  "description": "wBRL cash-flow agent for small Brazilian shops",
+  "scripts": {
+    "start": "node vencimento-api.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "viem": "^2.57.16"
+  }
+}
