@@ -1,12 +1,13 @@
+// Mainnet wBRL amounts are uint256-scale BigInts; never coerce them to Number.
 function compareBills(a, b) {
   return a.priority - b.priority || a.dueDate.localeCompare(b.dueDate) || a.id.localeCompare(b.id);
 }
 
 export function buildPaymentPlan({ balance, reserve, dailySpendCap = null, bills, inflows = [] }) {
-  if (!Number.isSafeInteger(Number(balance)) || balance < 0n) {
+  if (typeof balance !== 'bigint' || balance < 0n) {
     throw new Error('balance must be a non-negative bigint');
   }
-  if (!Number.isSafeInteger(Number(reserve)) || reserve < 0n) {
+  if (typeof reserve !== 'bigint' || reserve < 0n) {
     throw new Error('reserve must be a non-negative bigint');
   }
   if (reserve > balance) {

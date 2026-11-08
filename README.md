@@ -8,6 +8,14 @@ Vencimento is a cash-flow agent for small Brazilian shops. It reads supplier bil
 - Dashboard: https://levanter-production-4b47.up.railway.app/dashboard
 - ERC-8004 metadata: https://levanter-production-4b47.up.railway.app/agent.json
 
+## Results
+
+- 0.1 wBRL paid to Demo Supplier on Celo mainnet.
+- Transaction: https://celoscan.io/tx/0x7172d1c716af602fd2364a7a1675a05607c0b220223df451252bc9805af7bd64
+- Sender: `0x95149bf6b2caAC09DEBF4Af96Ce5AC94aBdB24E1`
+- Recipient: `0x145aAF98DC340f64146b7eE1EE4347F9d88D90bD`
+- Receipt status: successful (`0x1`); calldata includes the Loops attribution tag `celo_29cc419a3735`.
+
 ## Current flow
 
 1. Configure the shop wallet, balance, reserve, and daily cap.

@@ -32,3 +32,14 @@ const cappedPlan = buildPaymentPlan({
 
 assert.deepEqual(cappedPlan.payments, []);
 assert.match(cappedPlan.delayed[0].reason, /daily cap/i);
+
+const wBrlPlan = buildPaymentPlan({
+  balance: 5286847109291328000n,
+  reserve: 5000000000000000000n,
+  dailySpendCap: 100000000000000000n,
+  bills: [
+    { id: 'wbrl-bill', supplier: 'Demo Supplier', amount: 100000000000000000n, dueDate: '2026-11-08', priority: 1, graceDays: 0 },
+  ],
+});
+
+assert.deepEqual(wBrlPlan.payments.map((bill) => bill.id), ['wbrl-bill']);
